@@ -1,0 +1,3 @@
+[tool.vercel]
+# FastAPI vive en backend/main.py; api/index.py reexporta `app` para Vercel.
+entrypoint = "api.index:app"

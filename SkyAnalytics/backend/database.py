@@ -51,23 +51,35 @@ engine = create_engine(DATABASE_URL, **engine_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Crear tablas al importar; en serverless la BD puede no estar aún (p. ej. sin DATABASE_URL en Vercel).
-for attempt in range(1, 11):
+_log = logging.getLogger(__name__)
+if IS_SERVERLESS:
+    # Vercel: sin reintentos largos (evita timeout al arrancar la función).
     try:
         Base.metadata.create_all(bind=engine)
-        break
     except Exception as exc:
-        logging.getLogger(__name__).warning(
-            "Intento %d: no se pudieron crear tablas aún (DB no lista). Error: %s",
-            attempt,
+        _log.warning(
+            "Serverless: create_all omitido o falló (BD no lista). Error: %s",
             exc,
             exc_info=True,
         )
-        if attempt == 10:
-            logging.getLogger(__name__).warning(
-                "No se pudieron crear tablas al iniciar después de 10 intentos. La API arrancará; revisa la BD."
+else:
+    for attempt in range(1, 11):
+        try:
+            Base.metadata.create_all(bind=engine)
+            break
+        except Exception as exc:
+            _log.warning(
+                "Intento %d: no se pudieron crear tablas aún (DB no lista). Error: %s",
+                attempt,
+                exc,
+                exc_info=True,
             )
-        else:
-            time.sleep(3)
+            if attempt == 10:
+                _log.warning(
+                    "No se pudieron crear tablas al iniciar después de 10 intentos. La API arrancará; revisa la BD."
+                )
+            else:
+                time.sleep(3)
 
 
 # ==================== DEPENDENCY INJECTION ====================

@@ -1,0 +1,15 @@
+# Blueprint de Render: https://render.com/docs/blueprint-spec
+# Tras conectar el repo en Render, "New" → "Blueprint" → elige este archivo.
+# Debes crear una base PostgreSQL (Render u otra) y poner DATABASE_URL en el servicio web.
+version: "1"
+services:
+  - type: web
+    name: skyanalytics-api
+    rootDir: SkyAnalytics
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
